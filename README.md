@@ -1,8 +1,3 @@
-Gemini said
-Since you’ve officially rebranded to BranchoRAG, your README should reflect that this isn't just a basic script—it’s a Local Retrieval-Augmented Generation engine. This file is what makes your GitHub look professional and tells other developers (and your future self) how to use the "Brain."
-
-Create a new file in your main folder named README.md and paste this in:
-
 🌿 BranchoRAG v0.01
 BranchoRAG is a high-performance, local AI engine built to map, understand, and retrieve code logic from your local machine. By combining the raw speed of Rust with the deep learning power of PyTorch, BranchoRAG creates a "living memory" of your project structure.
 
