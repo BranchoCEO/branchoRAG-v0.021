@@ -1,5 +1,6 @@
 use pyo3::prelude::*;
 use serde::{Serialize, Deserialize};
+use std::collections::HashSet;
 use std::fs::File;
 use std::io::Write;
 use walkdir::WalkDir;
@@ -8,7 +9,7 @@ use walkdir::WalkDir;
 #[derive(Serialize, Deserialize)]
 struct GraphData {
     nodes: Vec<String>,
-    edges: Vec<(usize, usize)>, 
+    edges: Vec<(usize, usize)>,
 }
 
 #[pyclass]
@@ -30,16 +31,21 @@ impl BranchoRAG {
     fn scan_folder(&mut self, path: String) -> PyResult<()> {
         let ignore_list = ["target", ".git", ".venv", "__pycache__", "env", "node_modules"];
 
-        for entry in WalkDir::new(path).into_iter().filter_map(|e| e.ok()) {
-            let path_str = entry.path().display().to_string();
+        // HashSet gives O(1) duplicate detection instead of O(n) Vec scan
+        let mut seen: HashSet<String> = self.data.nodes.iter().cloned().collect();
 
-            // Skip if the path contains any of the ignored directory names
-            if ignore_list.iter().any(|&dir| path_str.contains(dir)) {
+        for entry in WalkDir::new(path).into_iter().filter_map(|e| e.ok()) {
+            // Check components so "targeting" doesn't match "target", etc.
+            let is_ignored = entry.path().components().any(|c| {
+                ignore_list.contains(&c.as_os_str().to_str().unwrap_or(""))
+            });
+            if is_ignored {
                 continue;
             }
 
             if entry.file_type().is_file() {
-                if !self.data.nodes.contains(&path_str) {
+                let path_str = entry.path().display().to_string();
+                if seen.insert(path_str.clone()) {
                     self.data.nodes.push(path_str);
                 }
             }
